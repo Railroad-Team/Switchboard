@@ -41,3 +41,6 @@ bin/
 ### Logger ###
 config.json
 logs/
+
+### Minecraft ###
+parchment/
