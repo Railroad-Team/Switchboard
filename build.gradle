@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'dev.railroadide'
@@ -32,7 +33,29 @@ dependencies {
     implementation 'dev.railroadide:RailroadLogger:1.0.2'
 }
 
+application {
+    mainClass = 'dev.railroadide.switchboard.Main'
+}
+
 tasks.register('sourcesJar', Jar) {
     archiveClassifier = 'sources'
     from sourceSets.main.allSource
+}
+
+jar {
+    manifest {
+        attributes(
+                "Implementation-Title": "Main",
+                "Implementation-Version": "1.0.0",
+                "Main-Class": "dev.railroadide.switchboard.Main"
+        )
+    }
+}
+
+shadowJar {
+    zip64 true
+    mergeServiceFiles()
+    archiveBaseName.set('Switchboard')
+    archiveVersion.set('')
+    archiveClassifier.set('')
 }
