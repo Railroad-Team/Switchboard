@@ -14,6 +14,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '24'
+
       - name: Checkout repository
         uses: actions/checkout@v5.0.0
 
@@ -39,7 +45,7 @@ jobs:
       - name: Build Docker image
         run: |
           mkdir temp
-          cp $GITHUB_WORKSPACE/build/libs/Switchboard-all.jar temp/Switchboard.jar
+          cp $GITHUB_WORKSPACE/build/libs/Switchboard.jar temp/Switchboard.jar
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
           rm -rf temp
 
