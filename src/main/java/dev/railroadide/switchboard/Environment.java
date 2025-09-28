@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Environment {
     private static final AtomicInteger PORT = new AtomicInteger(7000);
     private static final AtomicReference<Path> PARCHMENT_CLONE_PATH = new AtomicReference<>();
+    private static final AtomicReference<Path> CACHE_LOCATION = new AtomicReference<>();
 
     private static boolean loaded = false;
 
@@ -19,8 +20,9 @@ public class Environment {
         loaded = true;
         PORT.set(arguments.getInt("port"));
         PARCHMENT_CLONE_PATH.set(arguments.get("parchmentclonepath"));
+        CACHE_LOCATION.set(arguments.get("cacheloc"));
 
-        Main.LOGGER.info("Environment loaded!");
+        Switchboard.LOGGER.info("Environment loaded!");
     }
 
     public static int getPort() {
@@ -29,5 +31,9 @@ public class Environment {
 
     public static Path getParchmentClonePath() {
         return PARCHMENT_CLONE_PATH.get();
+    }
+
+    public static Path getCacheLocation() {
+        return CACHE_LOCATION.get();
     }
 }
