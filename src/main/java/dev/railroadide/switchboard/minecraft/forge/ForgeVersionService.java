@@ -41,6 +41,62 @@ public class ForgeVersionService extends MinecraftVersionService<String> {
         super("Forge", ttl, userAgent, httpTimeout);
     }
 
+    public static int compareForgeVersions(String v1, String v2) {
+        Optional<MinecraftVersion> mc1 = toMinecraftVersion(v1);
+        Optional<MinecraftVersion> mc2 = toMinecraftVersion(v2);
+        if (mc1.isPresent() && mc2.isPresent()) {
+            int compared = mc1.get().compareTo(mc2.get());
+            if(compared != 0)
+                return compared;
+        }
+
+        String build1 = v1.substring(v1.indexOf('-') + 1);
+        String build2 = v2.substring(v2.indexOf('-') + 1);
+
+        String[] split1 = build1.split("\\.");
+        String[] split2 = build2.split("\\.");
+
+        for (int i = 0; i < Math.max(split1.length, split2.length); i++) {
+            try {
+                int part1 = i < split1.length ? Integer.parseInt(split1[i]) : 0;
+                int part2 = i < split2.length ? Integer.parseInt(split2[i]) : 0;
+                if (part1 != part2)
+                    return Integer.compare(part1, part2);
+            } catch (NumberFormatException ignored) {
+                String str1 = i < split1.length ? split1[i] : "";
+                String str2 = i < split2.length ? split2[i] : "";
+
+                // check for "-" first, else fallback to standard lexicographical comparison
+                if (str1.equals("-") && !str2.equals("-"))
+                    return -1;
+                if (!str1.equals("-") && str2.equals("-"))
+                    return 1;
+
+                if(str1.contains("-") && str2.contains("-")) {
+                    String[] sub1 = str1.split("-", 2);
+                    String[] sub2 = str2.split("-", 2);
+                    if(!sub1[0].equals(sub2[0]))
+                        return sub1[0].compareTo(sub2[0]);
+
+                    if(sub1.length > 1 && sub2.length > 1)
+                        return sub1[1].compareTo(sub2[1]);
+
+                    if(sub1.length > 1)
+                        return 1; // e.g. "58-rc1" > "58"
+
+                    if(sub2.length > 1)
+                        return -1; // e.g. "58" < "58-rc1"
+
+                    return 0;
+                }
+
+                return str1.compareTo(str2);
+            }
+        }
+
+        return 0;
+    }
+
     // Extract minecraft version from a forge version like "1.21.8-58.0.10".
     public static Optional<MinecraftVersion> toMinecraftVersion(String forgeVersion) {
         if (forgeVersion == null)
@@ -101,7 +157,10 @@ public class ForgeVersionService extends MinecraftVersionService<String> {
 
     @Override
     public List<String> listAllVersions() {
-        return versions();
+        return versions().stream()
+                .sorted(ForgeVersionService::compareForgeVersions)
+                .toList()
+                .reversed();
     }
 
     @Override

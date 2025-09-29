@@ -31,7 +31,7 @@ public final class MinecraftVersion implements Comparable<MinecraftVersion> {
     private final LocalDateTime time;
     private final LocalDateTime releaseTime;
 
-    private final Path pistonMetaPath;
+    private final transient Path pistonMetaPath;
 
     public MinecraftVersion(String id, VersionType type, String url, LocalDateTime time, LocalDateTime releaseTime) {
         this.id = id;

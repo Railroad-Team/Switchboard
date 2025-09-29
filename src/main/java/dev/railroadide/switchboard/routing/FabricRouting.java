@@ -6,6 +6,8 @@ import dev.railroadide.switchboard.minecraft.fabric.FabricApiVersionService;
 import dev.railroadide.switchboard.minecraft.fabric.FabricLoaderVersionService;
 import io.javalin.Javalin;
 
+import java.util.Map;
+
 public class FabricRouting {
     public static void addRoutes(Javalin server) {
         var fabricApiVersionService = new FabricApiVersionService();
@@ -19,7 +21,7 @@ public class FabricRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -31,7 +33,7 @@ public class FabricRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -39,8 +41,8 @@ public class FabricRouting {
 
             fabricApiVersionService.latestFor(minecraftVersion, includePrereleases)
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /fabric/api/latest/{minecraftVersion}");
@@ -51,8 +53,8 @@ public class FabricRouting {
                     .stream()
                     .findFirst()
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /fabric/api/latest");
@@ -65,7 +67,7 @@ public class FabricRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -77,7 +79,7 @@ public class FabricRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -85,8 +87,8 @@ public class FabricRouting {
 
             fabricLoaderVersionService.latestFor(minecraftVersion, includePrereleases)
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Switchboard.GSON.toJsonTree(version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /fabric/loader/latest/{minecraftVersion}");
@@ -97,8 +99,8 @@ public class FabricRouting {
                     .stream()
                     .findFirst()
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Switchboard.GSON.toJsonTree(version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /fabric/loader/latest");

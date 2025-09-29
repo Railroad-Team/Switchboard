@@ -114,7 +114,9 @@ public class NeoforgeVersionService extends MinecraftVersionService<String> {
     public List<String> listAllVersions(boolean includePrereleases) {
         return versions().stream()
                 .filter(v -> includePrereleases || !isPrerelease(v))
-                .toList();
+                .sorted(this::compareVersions)
+                .toList()
+                .reversed();
     }
 
     @Override
@@ -127,8 +129,9 @@ public class NeoforgeVersionService extends MinecraftVersionService<String> {
         return versions().stream()
                 .filter(v -> v.startsWith(minecraftVersion.id().substring(2))) // Remove "1."
                 .filter(v -> includePrereleases || !isPrerelease(v))
-                .sorted(Comparator.reverseOrder())
-                .toList();
+                .sorted(this::compareVersions)
+                .toList()
+                .reversed();
     }
 
     public String latestVersion() {

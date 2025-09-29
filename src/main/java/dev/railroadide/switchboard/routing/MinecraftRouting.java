@@ -5,10 +5,7 @@ import dev.railroadide.switchboard.Switchboard;
 import dev.railroadide.switchboard.minecraft.MinecraftVersion;
 import io.javalin.Javalin;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MinecraftRouting {
@@ -21,67 +18,71 @@ public class MinecraftRouting {
             String id = ctx.pathParam("id");
             MinecraftVersion.fromId(id).ifPresentOrElse(
                     version -> ctx.json(Switchboard.GSON.toJsonTree(version)),
-                    () -> ctx.status(404).json("Not Found")
+                    () -> ctx.status(404).json(Map.of("error", "Not Found"))
             );
         });
         Switchboard.LOGGER.info("Registered endpoint: /minecraft/versions/{id}");
 
-        server.get("/minecraft/versions/latest", ctx ->
+        server.get("/minecraft/latest", ctx ->
                 MinecraftVersion.getLatestVersion().ifPresentOrElse(
                         version -> ctx.json(Switchboard.GSON.toJsonTree(version)),
-                        () -> ctx.status(404).json("Not Found")
+                        () -> ctx.status(404).json(Map.of("error", "Not Found"))
                 ));
-        Switchboard.LOGGER.info("Registered endpoint: /minecraft/versions/latest");
+        Switchboard.LOGGER.info("Registered endpoint: /minecraft/latest");
 
-        server.get("/minecraft/versions/latest/{versionType}", ctx -> {
+        server.get("/minecraft/latest/{versionType}", ctx -> {
             String versionType = ctx.pathParam("versionType").toLowerCase(Locale.ROOT);
             MinecraftVersion.VersionType type;
             try {
                 type = MinecraftVersion.VersionType.valueOf(versionType.toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException ignored) {
-                ctx.status(400).json("Invalid version type. Valid types are: " +
+                ctx.status(400).json(Map.of("error", "Invalid version type. Valid types are: " +
                         Arrays.stream(MinecraftVersion.VersionType.values())
                                 .map(MinecraftVersion.VersionType::name)
                                 .map(String::toLowerCase)
-                                .collect(Collectors.joining(", ")));
+                                .collect(Collectors.joining(", "))));
                 return;
             }
 
             MinecraftVersion.getLatestVersion(type).ifPresentOrElse(
                     version -> ctx.json(Switchboard.GSON.toJsonTree(version)),
-                    () -> ctx.status(404).json("Not Found")
+                    () -> ctx.status(404).json(Map.of("error", "Not Found"))
             );
         });
-        Switchboard.LOGGER.info("Registered endpoint: /minecraft/versions/latest/{versionType}");
+        Switchboard.LOGGER.info("Registered endpoint: /minecraft/latest/{versionType}");
 
         server.get("/minecraft/piston-meta/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
             Optional<MinecraftVersion> minecraftVersionOpt = MinecraftVersion.fromId(id);
             if (minecraftVersionOpt.isEmpty()) {
-                ctx.status(404).json("Not Found");
+                ctx.status(404).json(Map.of("error", "Not Found"));
                 return;
             }
 
-            minecraftVersionOpt.get().requestPistonMeta().thenAcceptAsync(versionPackage -> {
+            String requestBody = ctx.body();
+            ctx.future(() -> minecraftVersionOpt.get().requestPistonMeta().thenAccept(versionPackage -> {
                 // e.g. arguments.game,assets,mainClass,downloads.client.url = ["arguments.game", "assets", "mainClass", "downloads.client.url"]
-                List<String> fields = getFieldsFromBody(ctx.body());
+                List<String> fields = getFieldsFromBody(requestBody);
+                JsonObject versionPackageJson = Switchboard.GSON.toJsonTree(versionPackage).getAsJsonObject();
                 if (fields.isEmpty() || fields.contains("*")) {
-                    ctx.json(Switchboard.GSON.toJsonTree(versionPackage));
+                    ctx.json(versionPackageJson);
                 } else {
                     var filtered = new JsonObject();
-                    JsonObject original = Switchboard.GSON.toJsonTree(versionPackage).getAsJsonObject();
-                    filtered = filterJsonObject(original, fields);
+                    filtered = filterJsonObject(versionPackageJson, fields);
 
-                    ctx.json(Switchboard.GSON.toJsonTree(filtered));
+                    ctx.json(filtered);
                 }
-            });
+            }));
         });
         Switchboard.LOGGER.info("Registered endpoint: /minecraft/piston-meta/{id}");
     }
 
     private static List<String> getFieldsFromBody(String body) {
-        return Arrays.stream(body.split("\n"))
+        if (body == null || body.isBlank())
+            return Collections.emptyList();
+
+        return Arrays.stream(body.split("\r?\n"))
                 .map(String::trim)
                 .filter(line -> line.startsWith("fields "))
                 .map(line -> line.substring("fields ".length()))

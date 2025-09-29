@@ -5,6 +5,8 @@ import dev.railroadide.switchboard.minecraft.MinecraftVersion;
 import dev.railroadide.switchboard.minecraft.forge.ForgeVersionService;
 import io.javalin.Javalin;
 
+import java.util.Map;
+
 public class ForgeRouting {
     public static void addRoutes(Javalin server) {
         var forgeVersionService = new ForgeVersionService();
@@ -16,7 +18,7 @@ public class ForgeRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -28,7 +30,7 @@ public class ForgeRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -36,8 +38,8 @@ public class ForgeRouting {
 
             forgeVersionService.latestFor(minecraftVersion, includePrereleases)
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /forge/latest/{minecraftVersion}");
@@ -46,10 +48,10 @@ public class ForgeRouting {
             boolean includePrereleases = ctx.queryParamAsClass("includePrereleases", boolean.class).getOrDefault(false);
             forgeVersionService.listAllVersions(includePrereleases)
                     .stream()
-                    .reduce((_, second) -> second)
+                    .findFirst()
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /forge/latest");

@@ -4,6 +4,8 @@ import dev.railroadide.switchboard.Switchboard;
 import dev.railroadide.switchboard.minecraft.MinecraftVersion;
 import io.javalin.Javalin;
 
+import java.util.Map;
+
 public class Router {
     private final Javalin server;
 
@@ -20,7 +22,7 @@ public class Router {
         NeoforgeRouting.addRoutes(server);
         MinecraftRouting.addRoutes(server);
 
-        server.get("/", ctx -> ctx.result("Switchboard is running."));
+        server.get("/", ctx -> ctx.json(Map.of("message", "Switchboard is running.")));
         Switchboard.LOGGER.info("Registered endpoint: /");
     }
 }

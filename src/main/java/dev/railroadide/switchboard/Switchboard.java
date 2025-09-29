@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dev.railroadide.logger.Logger;
 import dev.railroadide.logger.LoggerManager;
+import dev.railroadide.switchboard.json.LocalDateTimeTypeAdapter;
+import dev.railroadide.switchboard.json.OptionalTypeAdapterFactory;
 import dev.railroadide.switchboard.routing.Router;
 import io.javalin.Javalin;
 import io.javalin.http.ContentType;
@@ -15,9 +17,14 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.net.http.HttpClient;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 
 public class Switchboard {
-    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeTypeAdapter())
+            .registerTypeAdapterFactory(new OptionalTypeAdapterFactory())
+            .setPrettyPrinting()
+            .create();
     public static final Logger LOGGER = LoggerManager.registerLogger(LoggerManager.create("Switchboard").build());
     public static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 

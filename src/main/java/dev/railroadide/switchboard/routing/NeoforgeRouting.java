@@ -5,6 +5,8 @@ import dev.railroadide.switchboard.minecraft.MinecraftVersion;
 import dev.railroadide.switchboard.minecraft.forge.NeoforgeVersionService;
 import io.javalin.Javalin;
 
+import java.util.Map;
+
 public class NeoforgeRouting {
     public static void addRoutes(Javalin server) {
         var neoforgeVersionService = new NeoforgeVersionService();
@@ -17,7 +19,7 @@ public class NeoforgeRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -29,7 +31,7 @@ public class NeoforgeRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -37,8 +39,8 @@ public class NeoforgeRouting {
 
             neoforgeVersionService.latestFor(minecraftVersion, includePrereleases)
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /neoforge/latest/{minecraftVersion}");
@@ -47,10 +49,10 @@ public class NeoforgeRouting {
             boolean includePrereleases = ctx.queryParamAsClass("includePrereleases", boolean.class).getOrDefault(false);
             neoforgeVersionService.listAllVersions(includePrereleases)
                     .stream()
-                    .reduce((_, second) -> second)
+                    .findFirst()
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /neoforge/latest");

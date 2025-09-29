@@ -9,6 +9,8 @@ import dev.railroadide.switchboard.minecraft.parchment.ParchmentVersion;
 import dev.railroadide.switchboard.minecraft.parchment.ParchmentVersionManager;
 import io.javalin.Javalin;
 
+import java.util.Map;
+
 public class MappingsRouting {
     public static void addRoutes(Javalin server) {
         var parchmentVersionManager = new ParchmentVersionManager();
@@ -31,7 +33,7 @@ public class MappingsRouting {
             parchmentVersionManager.latestFor(minecraftVersion)
                     .ifPresentOrElse(
                             ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /parchment/latest/{minecraftVersion}");
@@ -41,7 +43,7 @@ public class MappingsRouting {
             if (latest != null) {
                 ctx.json(latest);
             } else {
-                ctx.status(404).json("Not Found");
+                ctx.status(404).json(Map.of("error", "Not Found"));
             }
         });
         Switchboard.LOGGER.info("Registered endpoint: /parchment/latest");
@@ -58,7 +60,7 @@ public class MappingsRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -70,14 +72,14 @@ public class MappingsRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
             mcpVersionService.latestFor(minecraftVersion)
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /mcp/latest/{minecraftVersion}");
@@ -86,8 +88,8 @@ public class MappingsRouting {
                 .stream()
                 .findFirst()
                 .ifPresentOrElse(
-                        ctx::json,
-                        () -> ctx.status(404).json("Not Found")
+                        version -> ctx.json(Map.of("version", version)),
+                        () -> ctx.status(404).json(Map.of("error", "Not Found"))
                 ));
         Switchboard.LOGGER.info("Registered endpoint: /mcp/latest");
 
@@ -99,7 +101,7 @@ public class MappingsRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -111,8 +113,8 @@ public class MappingsRouting {
                 .stream()
                 .findFirst()
                 .ifPresentOrElse(
-                        ctx::json,
-                        () -> ctx.status(404).json("Not Found")
+                        version -> ctx.json(Map.of("version", version)),
+                        () -> ctx.status(404).json(Map.of("error", "Not Found"))
                 ));
         Switchboard.LOGGER.info("Registered endpoint: /mojmap/latest");
 
@@ -124,7 +126,7 @@ public class MappingsRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
@@ -136,14 +138,14 @@ public class MappingsRouting {
             String minecraftVersionStr = ctx.pathParam("minecraftVersion");
             MinecraftVersion minecraftVersion = MinecraftVersion.fromId(minecraftVersionStr).orElse(null);
             if (minecraftVersion == null) {
-                ctx.status(400).json("Invalid Minecraft version");
+                ctx.status(400).json(Map.of("error", "Invalid Minecraft version"));
                 return;
             }
 
             yarnVersionService.latestFor(minecraftVersion)
                     .ifPresentOrElse(
-                            ctx::json,
-                            () -> ctx.status(404).json("Not Found")
+                            version -> ctx.json(Map.of("version", version)),
+                            () -> ctx.status(404).json(Map.of("error", "Not Found"))
                     );
         });
         Switchboard.LOGGER.info("Registered endpoint: /yarn/latest/{minecraftVersion}");
@@ -152,8 +154,8 @@ public class MappingsRouting {
                 .stream()
                 .findFirst()
                 .ifPresentOrElse(
-                        ctx::json,
-                        () -> ctx.status(404).json("Not Found")
+                        version -> ctx.json(Map.of("version", version)),
+                        () -> ctx.status(404).json(Map.of("error", "Not Found"))
                 ));
         Switchboard.LOGGER.info("Registered endpoint: /yarn/latest");
     }
