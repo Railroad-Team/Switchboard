@@ -40,8 +40,8 @@ bin/
 
 ### Logger ###
 config.json
-logs/
+/logs/
 
 ### Minecraft ###
-parchment/
+/parchment/
 .cache
