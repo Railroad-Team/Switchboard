@@ -37,7 +37,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'dev.railroadide.switchboard.Main'
+    mainClass = 'dev.railroadide.switchboard.Switchboard'
 }
 
 tasks.register('sourcesJar', Jar) {
@@ -50,7 +50,7 @@ jar {
         attributes(
                 "Implementation-Title": "Main",
                 "Implementation-Version": "1.0.0",
-                "Main-Class": "dev.railroadide.switchboard.Main"
+                "Main-Class": "dev.railroadide.switchboard.Switchboard"
         )
     }
 }
