@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 // TODO: Make this async
 public class FabricApiVersionService extends MinecraftVersionService<String> {
@@ -41,7 +40,7 @@ public class FabricApiVersionService extends MinecraftVersionService<String> {
         super("FabricApi", ttl, userAgent, httpTimeout);
     }
 
-    public static Optional<MinecraftVersion> toMinecraftVersion(String fabricApiVersion) {
+    public static Optional<MinecraftVersion> getMinecraftVersion(String fabricApiVersion) {
         int plus = fabricApiVersion.indexOf('+');
         if (plus < 0 || plus == fabricApiVersion.length() - 1)
             return Optional.empty();
@@ -88,7 +87,7 @@ public class FabricApiVersionService extends MinecraftVersionService<String> {
         Objects.requireNonNull(minecraftVersion, "minecraftVersion");
         return versions().stream()
                 .filter(version -> includePrereleases || isRelease(version))
-                .filter(version -> toMinecraftVersion(version).map(minecraftVersion::equals).orElse(false))
+                .filter(version -> getMinecraftVersion(version).map(minecraftVersion::equals).orElse(false))
                 .toList()
                 .reversed();
     }
