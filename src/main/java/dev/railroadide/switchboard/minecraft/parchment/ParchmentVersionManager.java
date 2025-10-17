@@ -5,7 +5,10 @@ import dev.railroadide.switchboard.Switchboard;
 import dev.railroadide.switchboard.util.Cache;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.internal.storage.file.WindowCache;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.RepositoryCache;
+import org.eclipse.jgit.storage.file.WindowCacheConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,12 +22,15 @@ public class ParchmentVersionManager {
 
     private static List<ParchmentVersion> fetchAllVersions() {
         Path parchmentClonePath = Environment.getParchmentClonePath();
+
+        RepositoryCache.clear();
+        new WindowCacheConfig().install();
+
         if(!deleteDirectory(parchmentClonePath))
             return Collections.emptyList();
 
         try {
             Files.createDirectories(parchmentClonePath);
-            Files.createDirectories(parchmentClonePath.resolve(".git/objects"));
         } catch (IOException exception) {
             Switchboard.LOGGER.error("Failed to create Parchment clone directory", exception);
             return Collections.emptyList();
@@ -64,6 +70,9 @@ public class ParchmentVersionManager {
             walk.sorted(Comparator.reverseOrder())
                     .forEach(p -> {
                         try {
+                            if(isWindows())
+                                Files.setAttribute(p, "dos:readonly", false);
+
                             Files.deleteIfExists(p);
                         } catch (Exception exception) {
                             Switchboard.LOGGER.warn("Failed to delete {}", p, exception);
@@ -74,6 +83,10 @@ public class ParchmentVersionManager {
             Switchboard.LOGGER.error("Error walking {}", path, exception);
             return false;
         }
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("windows");
     }
 
     public List<ParchmentVersion> listAllVersions() {
