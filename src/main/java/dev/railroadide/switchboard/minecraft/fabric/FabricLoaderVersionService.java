@@ -173,7 +173,7 @@ public class FabricLoaderVersionService extends MinecraftVersionService<FabricLo
             throw new RuntimeException("Fabric loader versions HTTP " + response.statusCode());
 
         JsonArray jsonVersions = Switchboard.GSON.fromJson(response.body(), JsonArray.class);
-        return parseArray(jsonVersions);
+        return parseArray(jsonVersions); // TODO: Represent the entire json structure properly
     }
 
     private List<FabricLoaderVersion> fetchAllVersions() throws Exception {
@@ -200,7 +200,16 @@ public class FabricLoaderVersionService extends MinecraftVersionService<FabricLo
             if (!element.isJsonObject())
                 continue;
 
-            versions.add(Switchboard.GSON.fromJson(element, FabricLoaderVersion.class));
+            JsonObject obj = element.getAsJsonObject();
+            if(obj.has("loader")) {
+                JsonElement loaderElement = obj.get("loader");
+                if (!loaderElement.isJsonObject())
+                    continue;
+
+                obj = loaderElement.getAsJsonObject();
+            }
+
+            versions.add(Switchboard.GSON.fromJson(obj, FabricLoaderVersion.class));
         }
 
         return List.copyOf(versions);

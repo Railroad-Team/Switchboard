@@ -7,6 +7,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -18,20 +19,15 @@ public class ParchmentVersionManager {
 
     private static List<ParchmentVersion> fetchAllVersions() {
         Path parchmentClonePath = Environment.getParchmentClonePath();
-        if (Files.exists(parchmentClonePath)) {
-            try (Stream<Path> walkedFiles = Files.walk(parchmentClonePath)) {
-                walkedFiles.sorted(Comparator.reverseOrder())
-                        .forEach(path -> {
-                            try {
-                                Files.setAttribute(path, "dos:readonly", false);
-                                Files.deleteIfExists(path);
-                            } catch (Exception exception) {
-                                Switchboard.LOGGER.error("Failed to delete path: {}", path, exception);
-                            }
-                        });
-            } catch (Exception exception) {
-                Switchboard.LOGGER.error("Failed to clean up existing Parchment clone path: {}", parchmentClonePath, exception);
-            }
+        if(!deleteDirectory(parchmentClonePath))
+            return Collections.emptyList();
+
+        try {
+            Files.createDirectories(parchmentClonePath);
+            Files.createDirectories(parchmentClonePath.resolve(".git/objects"));
+        } catch (IOException exception) {
+            Switchboard.LOGGER.error("Failed to create Parchment clone directory", exception);
+            return Collections.emptyList();
         }
 
         try (Git git = Git.cloneRepository()
@@ -59,6 +55,24 @@ public class ParchmentVersionManager {
         } catch (GitAPIException exception) {
             Switchboard.LOGGER.error("Failed to clone Parchment repository", exception);
             return Collections.emptyList();
+        }
+    }
+
+    private static boolean deleteDirectory(Path path) {
+        if (Files.notExists(path)) return true;
+        try (Stream<Path> walk = Files.walk(path)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .forEach(p -> {
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (Exception exception) {
+                            Switchboard.LOGGER.warn("Failed to delete {}", p, exception);
+                        }
+                    });
+            return true;
+        } catch (Exception exception) {
+            Switchboard.LOGGER.error("Error walking {}", path, exception);
+            return false;
         }
     }
 
